@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="theme-color" content="#000000" />
+<meta name="apple-mobile-web-app-title" content="SPCX" />
+<link rel="manifest" href="/manifest.json" />
+<link rel="icon" href="/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/icon.svg" />
+<title>SPCX</title>
+<style>
+  :root{
+    --bg:#000; --ink:#f5f7fa; --dim:#8b94a3;
+    --up:#00e676; --down:#ff4d5e; --line:rgba(255,255,255,.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(40,80,160,.25), transparent 60%),
+      radial-gradient(800px 500px at 80% 110%, rgba(0,230,118,.06), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:max(24px,env(safe-area-inset-top)) 22px max(24px,env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;z-index:-1;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.6), transparent),
+      radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1px 1px at 85% 60%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1px 1px at 60% 85%, rgba(255,255,255,.45), transparent);
+  }
+
+  .wrap{width:100%;max-width:460px;text-align:center}
+  .head{display:flex;flex-direction:column;align-items:center;gap:5px;margin-bottom:24px}
+  .brand{font-size:12px;letter-spacing:.42em;text-transform:uppercase;color:var(--dim);font-weight:600;padding-left:.42em}
+  .ticker{font-size:36px;font-weight:800;letter-spacing:.12em;background:linear-gradient(180deg,#fff,#aebacb);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .exchange{font-size:11px;letter-spacing:.26em;color:var(--dim);text-transform:uppercase}
+
+  .price{font-variant-numeric:tabular-nums;font-size:clamp(50px,16vw,76px);font-weight:800;line-height:1;letter-spacing:-.02em;margin:4px 0 12px;text-shadow:0 0 40px rgba(120,170,255,.25);transition:opacity .25s}
+  .price .cur{font-size:.4em;font-weight:600;color:var(--dim);vertical-align:.35em;margin-right:.08em}
+  .change{display:inline-flex;align-items:center;gap:9px;font-variant-numeric:tabular-nums;font-size:17px;font-weight:700;padding:8px 15px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+  .change .arrow{font-size:14px}
+  .up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--dim)}
+
+  /* チャート + インタラクション */
+  .chart-card{margin:26px 0 4px;width:100%}
+  .chart-wrap{position:relative;width:100%;touch-action:none;cursor:crosshair}
+  .chart{width:100%;height:140px;display:block}
+  .cross{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.28);display:none;pointer-events:none}
+  .marker{position:absolute;width:9px;height:9px;border-radius:50%;border:2px solid #05070c;display:none;pointer-events:none;transform:translate(-50%,-50%);box-shadow:0 0 10px rgba(255,255,255,.5)}
+  .tip{position:absolute;top:2px;display:none;pointer-events:none;background:rgba(18,21,28,.96);border:1px solid var(--line);border-radius:10px;padding:7px 11px;text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap;z-index:5;box-shadow:0 8px 24px rgba(0,0,0,.55)}
+  .tip-d{font-size:10px;color:var(--dim);letter-spacing:.06em;margin-bottom:3px}
+  .tip-p{font-size:16px;font-weight:800;line-height:1}
+  .tip-p span{font-size:9px;color:var(--dim);font-weight:600;margin-left:2px}
+  .tip-hl{font-size:10px;color:var(--dim);margin-top:4px}
+  .tip-hl b{color:var(--ink);font-weight:600}
+  .range{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;margin-top:4px;padding:0 2px}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:22px 0 4px}
+  .stat{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:10px 4px}
+  .stat .k{font-size:10px;letter-spacing:.12em;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+  .stat .v{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  .foot{margin-top:22px;display:flex;flex-direction:column;align-items:center;gap:12px}
+  .updated{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .updated .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--up);margin-right:7px;vertical-align:middle;box-shadow:0 0 8px var(--up)}
+  .updated.stale .dot{background:var(--down);box-shadow:0 0 8px var(--down)}
+  button{appearance:none;cursor:pointer;font:inherit;font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--ink);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:11px 26px;transition:transform .08s,background .2s;-webkit-tap-highlight-color:transparent}
+  button:active{transform:scale(.96);background:rgba(255,255,255,.12)}
+  button:disabled{opacity:.5;cursor:default}
+
+  .note{margin-top:16px;font-size:10px;color:var(--dim);opacity:.8;line-height:1.5}
+  .msg{font-size:14px;color:var(--dim);line-height:1.7;max-width:340px;margin:0 auto}
+  .msg b{color:var(--down)}
+  .hidden{display:none!important}
+  .loading .price{opacity:.35}
+</style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <div class="head">
+      <div class="brand">SpaceX</div>
+      <div class="ticker">SPCX</div>
+      <div class="exchange">Nasdaq · USD</div>
+    </div>
+
+    <div id="view">
+      <div class="price" id="price">--<span class="cur">USD</span></div>
+      <div class="change flat" id="change"><span class="arrow">—</span><span id="changeText">--</span></div>
+
+      <div class="chart-card">
+        <div class="chart-wrap" id="chartWrap">
+          <svg class="chart" id="chart" viewBox="0 0 320 140" preserveAspectRatio="none" aria-hidden="true"></svg>
+          <div class="cross" id="cross"></div>
+          <div class="marker" id="marker"></div>
+          <div class="tip" id="tip"></div>
+        </div>
+        <div class="range"><span id="rangeStart">—</span><span>上場来（日足・なぞって詳細）</span><span id="rangeEnd">—</span></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="k">始値</div><div class="v" id="sOpen">--</div></div>
+        <div class="stat"><div class="k">高値</div><div class="v" id="sHigh">--</div></div>
+        <div class="stat"><div class="k">安値</div><div class="v" id="sLow">--</div></div>
+        <div class="stat"><div class="k">出来高</div><div class="v" id="sVol">--</div></div>
+      </div>
+
+      <div class="foot">
+        <div class="updated stale" id="updated"><span class="dot"></span><span id="updatedText">未取得</span></div>
+        <button id="refresh">更新</button>
+      </div>
+
+      <div class="note">データ表示のみ・15分程度の遅延あり。投資判断は自己責任で。</div>
+    </div>
+
+    <div id="error" class="msg hidden"></div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let lastLoad = 0;       // 連打/頻繁な再取得を防ぐ
+let chartPoints = [];   // {date,open,high,low,close} 古い→新しい
+let geom = null;        // チャートの座標計算用
+
+function showError(html){
+  $("view").classList.add("hidden");
+  const el = $("error"); el.innerHTML = html; el.classList.remove("hidden");
+}
+function num(x){ const n = parseFloat(x); return isNaN(n) ? null : n; }
+function money(n){ return n==null ? "--" : n.toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function compact(n){ return n==null ? "--" : Intl.NumberFormat("en",{notation:"compact",maximumFractionDigits:1}).format(n); }
+function mmdd(d){ const x=new Date(d); return (x.getMonth()+1)+"/"+x.getDate(); }
+function fmtDate(s){ const d=new Date(s); const wd=["日","月","火","水","木","金","土"][d.getDay()]; return `${d.getMonth()+1}/${d.getDate()} (${wd})`; }
+
+function coordFor(i){
+  const x = geom.pad + (i/(geom.n-1))*(geom.w-geom.pad*2);
+  const y = geom.h-geom.pad - ((chartPoints[i].close-geom.min)/geom.span)*(geom.h-geom.pad*2);
+  return [x,y];
+}
+
+function drawChart(pts){
+  chartPoints = pts;
+  const svg = $("chart");
+  if(!pts || pts.length < 2){ svg.innerHTML=""; geom=null; return; }
+  const w=320,h=140,pad=6;
+  const closes = pts.map(p=>p.close);
+  const min=Math.min(...closes), max=Math.max(...closes), span=(max-min)||1;
+  geom = {min,max,span,w,h,pad,n:pts.length};
+
+  const coords = pts.map((p,i)=>coordFor(i));
+  const up = closes[closes.length-1] >= closes[0];
+  const color = up ? "var(--up)" : "var(--down)";
+  const line = coords.map(c=>c[0].toFixed(1)+","+c[1].toFixed(1)).join(" ");
+  const area = `${pad},${h} ` + line + ` ${w-pad},${h}`;
+  svg.innerHTML = `
+    <polygon points="${area}" fill="${color}" opacity="0.10"/>
+    <polyline points="${line}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>`;
+}
+
+// ── ホバー/タッチで詳細表示 ──
+function showHover(clientX){
+  if(!geom) return;
+  const rect = $("chart").getBoundingClientRect();
+  let rel = (clientX - rect.left) / rect.width;
+  rel = Math.max(0, Math.min(1, rel));
+  const i = Math.round(rel * (geom.n-1));
+  const p = chartPoints[i];
+  const [vbX,vbY] = coordFor(i);
+  const px = vbX/geom.w * rect.width;
+  const py = vbY/geom.h * rect.height;
+  const up = (i>0) ? (p.close >= chartPoints[i-1].close) : (p.close >= chartPoints[0].close);
+  const color = up ? "var(--up)" : "var(--down)";
+
+  const cross=$("cross"); cross.style.left=px+"px"; cross.style.display="block";
+  const marker=$("marker"); marker.style.left=px+"px"; marker.style.top=py+"px"; marker.style.background=color; marker.style.display="block";
+
+  const tip=$("tip");
+  tip.innerHTML =
+    `<div class="tip-d">${fmtDate(p.date)}</div>`+
+    `<div class="tip-p" style="color:${color}">${money(p.close)}<span>USD</span></div>`+
+    `<div class="tip-hl">高 <b>${money(p.high)}</b> · 安 <b>${money(p.low)}</b><br>出来高 <b>${compact(p.volume)}</b></div>`;
+  tip.style.display="block";
+  const wrapW = $("chartWrap").clientWidth;
+  let tx = px - tip.offsetWidth/2;
+  tx = Math.max(0, Math.min(wrapW - tip.offsetWidth, tx));
+  tip.style.left = tx + "px";
+}
+function hideHover(){ ["cross","marker","tip"].forEach(id=>$(id).style.display="none"); }
+
+function render(data){
+  const q = data.quote || {};
+  const price = num(q.close), diff = num(q.change), pct = num(q.percent_change);
+
+  $("price").innerHTML = `${money(price)}<span class="cur"> USD</span>`;
+  const ch = $("change");
+  const sign = diff>0 ? "up" : diff<0 ? "down" : "flat";
+  ch.className = "change " + sign;
+  ch.querySelector(".arrow").textContent = diff>0?"▲":diff<0?"▼":"—";
+  $("changeText").textContent = `${diff>0?"+":""}${money(diff)} (${pct>0?"+":""}${pct==null?"--":pct.toFixed(2)}%)`;
+
+  $("sOpen").textContent = money(num(q.open));
+  $("sHigh").textContent = money(num(q.high));
+  $("sLow").textContent  = money(num(q.low));
+  $("sVol").textContent  = compact(num(q.volume));
+
+  const values = (data.ts && data.ts.values) ? [...data.ts.values].reverse() : [];
+  const pts = values.map(v=>({
+    date:v.datetime, open:num(v.open), high:num(v.high), low:num(v.low), close:num(v.close), volume:num(v.volume)
+  })).filter(p=>p.close!=null);
+  drawChart(pts);
+  if(pts.length){
+    $("rangeStart").textContent = mmdd(pts[0].date);
+    $("rangeEnd").textContent   = mmdd(pts[pts.length-1].date);
+  }
+
+  const t = new Date();
+  $("updatedText").textContent = "最終更新 " + t.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
+  $("updated").classList.remove("stale");
+}
+
+async function load(){
+  const btn = $("refresh");
+  btn.disabled = true; btn.textContent = "取得中…"; $("app").classList.add("loading");
+  try{
+    const res = await fetch("/api/spcx");
+    const data = await res.json();
+    if(!res.ok){
+      if(data.error === "no_key") showError(`サーバーにキー未設定。<br>Vercelの環境変数 <b>TWELVE_DATA_KEY</b> を設定してください。`);
+      else showError(`データ取得に失敗：<b>${data.message||data.error||res.status}</b>`);
+      return;
+    }
+    $("error").classList.add("hidden"); $("view").classList.remove("hidden");
+    lastLoad = Date.now();
+    render(data);
+  }catch(e){
+    $("updated").classList.add("stale");
+    $("updatedText").textContent = "取得失敗：通信エラー";
+  }finally{
+    btn.disabled=false; btn.textContent="更新"; $("app").classList.remove("loading");
+  }
+}
+
+// イベント
+const wrap = $("chartWrap");
+wrap.addEventListener("pointermove", e=>showHover(e.clientX));
+wrap.addEventListener("pointerdown", e=>showHover(e.clientX));
+wrap.addEventListener("pointerleave", hideHover);
+wrap.addEventListener("pointercancel", hideHover);
+$("refresh").addEventListener("click", load);
+// タブ復帰時は、前回取得から2分以上空いている時だけ更新（API節約）
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden && Date.now()-lastLoad > 120000) load();
+});
+
+// 自動更新はしない。開いた時に1回 + 「更新」ボタン + 久々の復帰時のみ。
+load();
+</script>
+</body>
+</html>

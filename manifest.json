@@ -1,0 +1,15 @@
+{
+  "name": "SPCX — SpaceX 株価",
+  "short_name": "SPCX",
+  "description": "SpaceX (SPCX) の株価を1画面で見る",
+  "lang": "ja",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,14 @@
+# APIキーは Vercel の環境変数に置く。コードには一切入れない。
+.env
+.env.local
+.vercel
+
+# ローカル実験用の使い捨て（本番不要）
+dev-server.mjs
+test-api.mjs
+.claude/
+
+# 依存・OS / エディタのゴミ
+node_modules
+.DS_Store
+Thumbs.db

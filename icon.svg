@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#00c853"/>
+      <stop offset="1" stop-color="#00e676"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+
+  <!-- 星 -->
+  <circle cx="110" cy="120" r="3" fill="#ffffff" opacity=".7"/>
+  <circle cx="400" cy="150" r="2.5" fill="#ffffff" opacity=".5"/>
+  <circle cx="150" cy="220" r="2" fill="#ffffff" opacity=".5"/>
+  <circle cx="380" cy="300" r="2" fill="#ffffff" opacity=".4"/>
+
+  <!-- 上昇チャートライン -->
+  <polyline points="90,370 175,320 240,345 320,235 410,150"
+    fill="none" stroke="url(#line)" stroke-width="26"
+    stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- 矢印の先 -->
+  <polygon points="410,150 360,150 410,200" fill="#00e676" transform="rotate(-45 410 150)" opacity="0"/>
+  <path d="M372 138 L424 138 L424 190" fill="none" stroke="#00e676" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- SPCX -->
+  <text x="256" y="452" text-anchor="middle"
+    font-family="-apple-system, Segoe UI, Roboto, sans-serif"
+    font-size="84" font-weight="800" letter-spacing="6" fill="#f5f7fa">SPCX</text>
+</svg>
